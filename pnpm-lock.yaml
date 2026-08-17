@@ -5369,6 +5369,21 @@ importers:
         specifier: workspace:^
         version: link:../../session/session-projection
 
+  packages/loadsim/loadsim:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@deepseek-ai/dsh-pool':
+        specifier: workspace:^
+        version: link:../../pool/pool
+      '@deepseek-ai/dsh-tenant-residency':
+        specifier: workspace:^
+        version: link:../../tenant/tenant-residency
+
   packages/lsp/lsp:
     devDependencies:
       '@deepseek-ai/cordis':
@@ -5558,6 +5573,18 @@ importers:
       '@deepseek-ai/dsh-user-questions':
         specifier: workspace:^
         version: link:../../interaction/user-questions
+
+  packages/pool/pool:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
 
   packages/preset/agent-presets:
     dependencies:
@@ -7520,6 +7547,21 @@ importers:
       '@deepseek-ai/dsh-timeout':
         specifier: workspace:^
         version: link:../../util/timeout
+
+  packages/tenant/tenant-residency:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@deepseek-ai/dsh-pool':
+        specifier: workspace:^
+        version: link:../../pool/pool
 
   packages/terminal/terminal:
     devDependencies:
