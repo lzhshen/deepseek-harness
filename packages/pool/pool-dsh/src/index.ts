@@ -13,5 +13,7 @@ export type { Config as PoolRuntimeConfig, PoolBinding } from './runtime.ts'
 export { PoolFileSystem } from './fs.ts'
 export type { LocalConfig as PoolFileSystemConfig } from './fs.ts'
 export { PoolSubprocess } from './subprocess.ts'
+export { PoolTenantProbe } from './probe.ts'
+export type { PoolTenantStamp } from './probe.ts'
 
 export { default } from './runtime.ts'

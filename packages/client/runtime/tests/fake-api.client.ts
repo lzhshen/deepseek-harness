@@ -165,6 +165,13 @@ export class FakeApiClient implements IApiClient {
     select: (payload: unknown) => this.record('tenant.select', payload, Promise.resolve(ok({
       current: (payload as { userId: string }).userId,
     }))),
+    stamp: (payload: unknown) => this.record('tenant.stamp', payload, Promise.resolve(ok({
+      userId: 'alice',
+      sandboxId: 'sb-1',
+      warm: false,
+      file: '/storage/alice/tenant-stamp.txt',
+      content: 'x',
+    }))),
   }
 
   onSubagentList: (payload: unknown) => Promise<RpcResponse<{ entries: never[]; parentAvailable: boolean }>>

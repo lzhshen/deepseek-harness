@@ -13,7 +13,13 @@ const t: TenantSwitcherProps['t'] = (key) => {
   const dict: Record<string, string> = {
     'label.current': 'Current user',
     'action.switch': 'Switch user',
+    'action.stamp': 'Bind my sandbox',
     'menu.title': 'Switch user',
+    'echo.user': 'User:',
+    'echo.sandbox': 'Sandbox:',
+    'echo.file': 'File:',
+    'echo.warm': 'warm hit',
+    'echo.cold': 'cold bind',
   }
   return dict[key] ?? key
 }
@@ -22,6 +28,9 @@ function props(overrides: Partial<TenantSwitcherProps> = {}): TenantSwitcherProp
   return {
     load: vi.fn().mockResolvedValue({ users: ['alice', 'bob'], current: 'alice' }),
     select: vi.fn().mockResolvedValue(undefined),
+    stamp: vi.fn().mockResolvedValue({
+      userId: 'alice', sandboxId: 'sb-1', warm: false, file: '/storage/alice/tenant-stamp.txt', content: 'x',
+    }),
     t,
     ...overrides,
   }
@@ -53,5 +62,19 @@ describe('TenantSwitcher', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Switch user' }))
     const alice = await screen.findByRole('menuitem', { name: 'alice' })
     expect((alice as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('echoes the sandbox and file after a stamp', async () => {
+    const stamp = vi.fn().mockResolvedValue({
+      userId: 'alice', sandboxId: 'sb-42', warm: true, file: '/storage/alice/tenant-stamp.txt', content: 'tenant-probe user=alice',
+    })
+    render(<TenantSwitcher {...props({ stamp })} />)
+    await waitFor(() => expect(screen.getByText('alice')).toBeTruthy())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Bind my sandbox' }))
+    await waitFor(() => expect(stamp).toHaveBeenCalled())
+    await waitFor(() => expect(screen.getByText(/sb-42/)).toBeTruthy())
+    expect(screen.getByText(/storage\/alice\/tenant-stamp\.txt/)).toBeTruthy()
+    expect(screen.getByText('tenant-probe user=alice')).toBeTruthy()
   })
 })

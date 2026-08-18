@@ -15,6 +15,8 @@ export interface TenantSwitcherInjected {
   load: () => Promise<{ users: string[]; current: string }>
   /** Switch to another user (the host re-lists that user's sessions). */
   select: (userId: string) => Promise<void>
+  /** Bind the current user's sandbox and echo the user's sandbox/file (design V2). */
+  stamp: () => Promise<{ userId: string; sandboxId: string; warm: boolean; file: string; content: string }>
 }
 
 /** Composed component props: the inject face plus the locale seat. */
@@ -26,15 +28,25 @@ interface Roster {
   current: string
 }
 
+/** One stamp echo (the user's sandbox and file, read back). */
+interface StampEcho {
+  userId: string
+  sandboxId: string
+  warm: boolean
+  file: string
+  content: string
+}
+
 /**
- * Render the floating current-user pill and its switch menu.
+ * Render the floating current-user pill and a sandbox-probe action.
  * @param props - inject face and locale seat.
  * @returns the overlay entry element tree.
  */
-export function TenantSwitcher({ load, select, t }: TenantSwitcherProps) {
+export function TenantSwitcher({ load, select, stamp, t }: TenantSwitcherProps) {
   const [roster, setRoster] = useState<Roster | null>(null)
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [echo, setEcho] = useState<StampEcho | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -63,9 +75,20 @@ export function TenantSwitcher({ load, select, t }: TenantSwitcherProps) {
     setBusy(true)
     void select(userId).then(() => {
       setRoster(prev => prev === null ? prev : { users: prev.users, current: userId })
+      setEcho(null)
       setOpen(false)
     }, () => {
       // A failed switch leaves the current selection unchanged.
+    }).finally(() => { setBusy(false) })
+  }
+
+  const probe = (): void => {
+    if (busy) return
+    setBusy(true)
+    void stamp().then((value) => {
+      setEcho(value)
+    }, () => {
+      // A failed probe leaves the previous echo unchanged.
     }).finally(() => { setBusy(false) })
   }
 
@@ -96,6 +119,23 @@ export function TenantSwitcher({ load, select, t }: TenantSwitcherProps) {
               {user}
             </button>
           ))}
+        </div>
+      )}
+      <button
+        type="button"
+        className={css.probe}
+        disabled={busy}
+        onClick={probe}
+      >
+        {t('action.stamp')}
+      </button>
+      {echo !== null && (
+        <div className={css.echo} data-testid="tenant-stamp-echo">
+          <div className={css.echoRow}>{t('echo.user')} {echo.userId}</div>
+          <div className={css.echoRow}>{t('echo.sandbox')} {echo.sandboxId}</div>
+          <div className={clsx(css.echoRow, echo.warm && css.warm)}>{echo.warm ? t('echo.warm') : t('echo.cold')}</div>
+          <div className={css.echoRow}>{t('echo.file')} {echo.file}</div>
+          <div className={css.echoContent}>{echo.content}</div>
         </div>
       )}
     </div>

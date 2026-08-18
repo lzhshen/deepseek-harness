@@ -29,7 +29,9 @@ await ctx.plugin(PoolSubprocess)
 
 `pool` hosts the `PoolManager` over the POC's in-memory ledger and fake Pod substrate; `poolCapacity`/`targetWarmCount`/`idleTimeoutMs` are the manager's tunables. `storageRoot` is the local stand-in for the CFS — each user's files live under `storageRoot/<userId>/` so users stay isolated (design D11). `engineId` names this brain replica for the orphan sweep; it defaults to a random id.
 
-`PoolFileSystem` and `PoolSubprocess` register as `ctx.fs`/`ctx.subprocess` **in place of** the local backends (loading both would collide). They route every path and child working directory into the caller's pooled user directory; the sandbox binding itself is acquired by the engine loop through `ctx.pool.acquire()` (async, before tool calls — design 3.3.3).
+`PoolFileSystem` and `PoolSubprocess` register as `ctx.fs`/`ctx.subprocess` **in place of** the local backends (loading both would collide). When the tenant service (`@deepseek-ai/dsh-tenant`) is composed, their base directory follows `ctx.tenant.currentUserId()` — relative paths and child working directories resolve under `storageRoot/<currentUserId>/`, so two users land in two distinct directories (design V2). Without the tenant service they keep the configured `cwd`. The sandbox binding itself is acquired by the engine loop through `ctx.pool.acquire()` (async, before tool calls — design 3.3.3).
+
+`PoolTenantProbe` (`ctx.poolTenantProbe`) is a host-side service that drives the whole identity chain in one call for a browser echo: current user → `pool.acquire` → write a stamp file under the user's directory → read it back.
 
 ## Model Experience
 

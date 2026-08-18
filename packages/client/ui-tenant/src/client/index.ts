@@ -66,6 +66,17 @@ export function apply(ctx: ClientContext): void {
           // The baseline merge drops rows no longer visible to the new user.
           await sessions.refresh()
         },
+        stamp: async () => {
+          const response = await connection.api.tenant.stamp({})
+          if (!response.result.ok) throw new Error(response.result.error.message)
+          return {
+            userId: response.result.value.userId,
+            sandboxId: response.result.value.sandboxId,
+            warm: response.result.value.warm,
+            file: response.result.value.file,
+            content: response.result.value.content,
+          }
+        },
       }
     },
   }, TenantSwitcher))

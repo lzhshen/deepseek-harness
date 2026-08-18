@@ -64,13 +64,13 @@ export class PoolSubprocess extends LocalSubprocessRuntime {
     return Promise.reject(new Error('pool-dsh: spawnTerminal is not implemented in the POC pooled sandbox'))
   }
 
-  /** Route `cwd` under the pool's storage root, treating it as a user-scoped path. */
+  /** Route `cwd` under the current user's pooled directory when tenancy is composed. */
   private scopedCwd(cwd: string): string {
+    const userId = (this.ctx.get('tenant') as { currentUserId(): string } | undefined)?.currentUserId()
+    if (userId === undefined) return cwd
     const normalized = normalize(cwd)
-    const prefix = normalize(this.pool.storageRoot) + '/'
-    if (isAbsolute(normalized) && normalized.startsWith(prefix)) return normalized
     if (isAbsolute(normalized)) return normalized
-    return join(normalize(this.pool.storageRoot), normalized)
+    return join(normalize(this.pool.storageRoot), userId, normalized)
   }
 }
 

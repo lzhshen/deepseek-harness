@@ -27,3 +27,16 @@ export const tenantSelectRequestSchema = z.object({
 export const tenantSelectValueSchema = z.object({
   current: z.string().min(1),
 }) satisfies z.ZodType<Wire<ResponseValue<'tenant.select'>>>
+
+/** tenant.stamp request payload. */
+export const tenantStampRequestSchema = z.object({
+}) satisfies z.ZodType<Wire<RequestPayload<'tenant.stamp'>>>
+
+/** tenant.stamp response value. */
+export const tenantStampValueSchema = z.object({
+  userId: z.string().min(1),
+  sandboxId: z.string(),
+  warm: z.boolean(),
+  file: z.string(),
+  content: z.string(),
+}) satisfies z.ZodType<Wire<ResponseValue<'tenant.stamp'>>>

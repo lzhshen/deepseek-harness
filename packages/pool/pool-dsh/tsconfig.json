@@ -28,6 +28,9 @@
       "path": "../../subprocess/subprocess-local"
     },
     {
+      "path": "../../tenant/tenant"
+    },
+    {
       "path": "../../runtime-diagnostics/invariants"
     }
   ]

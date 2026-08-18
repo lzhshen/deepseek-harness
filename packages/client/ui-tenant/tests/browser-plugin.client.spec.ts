@@ -16,6 +16,7 @@ const api = {
   tenant: {
     list: async () => ({ rpcId: '' as never, result: { ok: true as const, value: { users: ['alice'], current: 'alice' } } }),
     select: async () => ({ rpcId: '' as never, result: { ok: true as const, value: { current: 'alice' } } }),
+    stamp: async () => ({ rpcId: '' as never, result: { ok: true as const, value: { userId: 'alice', sandboxId: 's', warm: false, file: '/f', content: 'c' } } }),
   },
 }
 

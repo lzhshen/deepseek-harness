@@ -32,6 +32,7 @@ import {
 import {
   tenantListRequestSchema,
   tenantSelectRequestSchema,
+  tenantStampRequestSchema,
 } from '../api/tenant.schema.ts'
 import {
   hostCreateDirectoryRequestSchema, hostDescribeRequestSchema,
@@ -106,6 +107,7 @@ const UNARY_ROUTES: UnaryRoutes = {
   'session.cancel': { schema: sessionCancelRequestSchema, invoke: (api, r) => api.sessions.cancel(r) },
   'tenant.list': { schema: tenantListRequestSchema, invoke: (api, r) => api.tenant.list(r) },
   'tenant.select': { schema: tenantSelectRequestSchema, invoke: (api, r) => api.tenant.select(r) },
+  'tenant.stamp': { schema: tenantStampRequestSchema, invoke: (api, r) => api.tenant.stamp(r) },
   'subagent.list': { schema: subagentListRequestSchema, invoke: (api, r, signal) => api.subagents.list(r, signal) },
   'subagent.history': { schema: subagentHistoryRequestSchema, invoke: (api, r, signal) => api.subagents.history(r, signal) },
   'subagent.prompt': { schema: subagentPromptRequestSchema, invoke: (api, r, signal) => api.subagents.prompt(r, signal) },

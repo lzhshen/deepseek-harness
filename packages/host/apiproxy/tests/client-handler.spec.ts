@@ -66,6 +66,7 @@ function scriptedApi(overrides: {
     tenant: {
       list: r => ok(r, { users: ['alice'], current: 'alice' }),
       select: r => ok(r, { current: r.payload.userId }),
+      stamp: r => ok(r, { userId: 'alice', sandboxId: 'sb-1', warm: false, file: '/storage/alice/tenant-stamp.txt', content: 'x' }),
     },
     subagents: {
       list: r => ok(r, { entries: [], parentAvailable: false }),

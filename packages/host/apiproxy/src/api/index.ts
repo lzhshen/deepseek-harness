@@ -50,6 +50,7 @@ export type {
   SessionListMetadata, SessionProjectionsBlock, SessionSearchItem, SessionsApi, SessionSummary,
 } from './sessions.ts'
 export type { TenantApi, TenantView } from './tenant.ts'
+export type { TenantStampView } from './tenant.ts'
 export type { DirectoryEntry, DirectoryListing, HostApi } from './host.ts'
 export type {
   SubagentAddress, SubagentCatalog, SubagentInterruptReceipt, SubagentListEntry,

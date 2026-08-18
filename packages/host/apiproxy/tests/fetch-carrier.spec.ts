@@ -116,6 +116,12 @@ function fakeApi(overrides: Partial<{ muxFrames: MuxFrame[]; hostFrames: HostFra
       async select(request) {
         return { rpcId: request.rpcId, result: { ok: true, value: { current: request.payload.userId } } }
       },
+      async stamp(request) {
+        return {
+          rpcId: request.rpcId,
+          result: { ok: true, value: { userId: 'alice', sandboxId: 'sb-1', warm: false, file: '/s/a', content: 'x' } },
+        }
+      },
     },
     subagents: {
       async list(request) {

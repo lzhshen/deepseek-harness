@@ -2622,6 +2622,34 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         }
         return Promise.resolve(ok(request, { current: tenant.currentUserId() }))
       },
+      async stamp(request) {
+        const probe = ctx.get('poolTenantProbe') as { stamp(): Promise<{
+          userId: string
+          sandboxId: string
+          warm: boolean
+          file: string
+          content: string
+        }> } | undefined
+        if (probe === undefined) {
+          return err(request, {
+            code: 'internal',
+            message: 'pool tenant probe is absent: this deployment does not mount @deepseek-ai/dsh-pool-dsh in its composition',
+            details: {},
+          })
+        }
+        try {
+          const result = await probe.stamp()
+          return ok(request, {
+            userId: result.userId,
+            sandboxId: String(result.sandboxId),
+            warm: result.warm,
+            file: result.file,
+            content: result.content,
+          })
+        } catch (error: unknown) {
+          return err(request, { code: 'internal', message: `tenant stamp failed: ${String(error)}`, details: {} })
+        }
+      },
     },
 
     subagents: {

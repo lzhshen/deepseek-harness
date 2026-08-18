@@ -2777,9 +2777,6 @@ importers:
 
   packages/client/ui-tenant:
     dependencies:
-      '@deepseek-ai/dsh-client-connection':
-        specifier: workspace:^
-        version: link:../connection
       '@deepseek-ai/dsh-client-locale':
         specifier: workspace:^
         version: link:../locale
@@ -5659,6 +5656,9 @@ importers:
       '@deepseek-ai/dsh-subprocess-local':
         specifier: workspace:^
         version: link:../../subprocess/subprocess-local
+      '@deepseek-ai/dsh-tenant':
+        specifier: workspace:^
+        version: link:../../tenant/tenant
 
   packages/preset/agent-presets:
     dependencies:

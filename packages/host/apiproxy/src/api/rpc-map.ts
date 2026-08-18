@@ -37,6 +37,7 @@ export interface RpcMethodMap {
   'session.cancel': SessionsApi['cancel']
   'tenant.list': TenantApi['list']
   'tenant.select': TenantApi['select']
+  'tenant.stamp': TenantApi['stamp']
   'subagent.list': SubagentsApi['list']
   'subagent.history': SubagentsApi['history']
   'subagent.prompt': SubagentsApi['prompt']

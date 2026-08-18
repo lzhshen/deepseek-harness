@@ -29,7 +29,9 @@ await ctx.plugin(PoolSubprocess)
 
 `pool` 在 POC 的内存账本与假 Pod 基座上宿主 `PoolManager`；`poolCapacity`/`targetWarmCount`/`idleTimeoutMs` 是管理器的可调项。`storageRoot` 是 CFS 的本地替身——每个用户的文件落在 `storageRoot/<userId>/` 下，用户之间天然隔离（决策 D11）。`engineId` 为孤儿收尸标记本大脑副本，缺省为随机 id。
 
-`PoolFileSystem` 与 `PoolSubprocess` **取代**本地后端注册为 `ctx.fs`/`ctx.subprocess`（同时加载会冲突）。它们把每条路径与子进程工作目录路由进调用方的池化用户目录；沙箱绑定本身由引擎循环经 `ctx.pool.acquire()` 获取（异步、先于工具调用——设计 3.3.3）。
+`PoolFileSystem` 与 `PoolSubprocess` **取代**本地后端注册为 `ctx.fs`/`ctx.subprocess`（同时加载会冲突）。组合了 tenant 服务（`@deepseek-ai/dsh-tenant`）时，它们的基准目录跟随 `ctx.tenant.currentUserId()`——相对路径与子进程工作目录解析到 `storageRoot/<currentUserId>/` 下，两个用户落在两个不同目录（设计 V2）；未组合 tenant 时回退到配置的 `cwd`。沙箱绑定本身由引擎循环经 `ctx.pool.acquire()` 获取（异步、先于工具调用——设计 3.3.3）。
+
+`PoolTenantProbe`（`ctx.poolTenantProbe`）是一个宿主侧服务，一次调用驱动整条身份链供浏览器回显：当前用户 → `pool.acquire` → 在该用户目录写盖章文件 → 读回。
 
 ## 模型体验
 

@@ -34,6 +34,7 @@ import {
 import {
   tenantListViewSchema,
   tenantSelectValueSchema,
+  tenantStampValueSchema,
 } from '../api/tenant.schema.ts'
 import {
   workspaceArchiveSessionValueSchema,
@@ -106,6 +107,7 @@ export interface IApiClient {
   tenant: {
     list(payload: RequestPayload<'tenant.list'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'tenant.list'>>>
     select(payload: RequestPayload<'tenant.select'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'tenant.select'>>>
+    stamp(payload: RequestPayload<'tenant.stamp'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'tenant.stamp'>>>
   }
   subagents: {
     list(payload: RequestPayload<'subagent.list'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'subagent.list'>>>
@@ -192,6 +194,7 @@ const UNARY_VALUE_SCHEMAS: { [K in keyof RpcMethodMap]: z.ZodType<Wire<ResponseV
   'session.cancel': sessionCancelValueSchema,
   'tenant.list': tenantListViewSchema,
   'tenant.select': tenantSelectValueSchema,
+  'tenant.stamp': tenantStampValueSchema,
   'subagent.list': subagentListValueSchema,
   'subagent.history': subagentHistoryValueSchema,
   'subagent.prompt': subagentPromptValueSchema,
@@ -437,6 +440,7 @@ export abstract class AbstractApiClient implements IApiClient {
   readonly tenant: IApiClient['tenant'] = {
     list: (payload, signal) => this.callUnary('tenant.list', payload, signal),
     select: (payload, signal) => this.callUnary('tenant.select', payload, signal),
+    stamp: (payload, signal) => this.callUnary('tenant.stamp', payload, signal),
   }
 
   readonly subagents: IApiClient['subagents'] = {
