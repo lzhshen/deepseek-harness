@@ -109,6 +109,14 @@ function fakeApi(overrides: Partial<{ muxFrames: MuxFrame[]; hostFrames: HostFra
         return { rpcId: request.rpcId, result: { ok: true, value: { accepted: true as const } } }
       },
     },
+    tenant: {
+      async list(request) {
+        return { rpcId: request.rpcId, result: { ok: true, value: { users: ['alice'], current: 'alice' } } }
+      },
+      async select(request) {
+        return { rpcId: request.rpcId, result: { ok: true, value: { current: request.payload.userId } } }
+      },
+    },
     subagents: {
       async list(request) {
         return { rpcId: request.rpcId, result: { ok: true, value: { entries: [], parentAvailable: false } } }

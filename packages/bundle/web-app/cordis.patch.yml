@@ -285,6 +285,11 @@
     - id: ui-trajectory
       name: '@deepseek-ai/dsh-client-ui-trajectory'
 
+    # Multi-tenant current-user switch (POC, design V1): the floating pill that
+    # selects the simulated user and re-lists that user's sessions.
+    - id: ui-tenant
+      name: '@deepseek-ai/dsh-client-ui-tenant'
+
 # ── the agent plane moves behind agent presets ─────────────────────────────
 #
 # Every row below composes what ONE agent contributes to the host registries:

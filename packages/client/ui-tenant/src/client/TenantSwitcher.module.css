@@ -1,0 +1,71 @@
+/* Floating current-user switch, anchored to the top-right of the frame. The
+ * shell.overlay layer is click-through; the pill opts back into pointer
+ * events and the menu drops below it. Semantic tokens only. */
+.root {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: var(--dsw-z-overlay, 1000);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.pill {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--dsw-border, #333);
+  border-radius: 999px;
+  background: var(--dsw-surface, #1e1e1e);
+  color: var(--dsw-text, #e2e8f0);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.pillOpen {
+  border-color: var(--dsw-accent, #818cf8);
+}
+
+.label {
+  opacity: 0.7;
+}
+
+.current {
+  font-weight: 600;
+}
+
+.menu {
+  pointer-events: auto;
+  margin-top: 6px;
+  min-width: 120px;
+  border: 1px solid var(--dsw-border, #333);
+  border-radius: 8px;
+  background: var(--dsw-surface, #1e1e1e);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 40%);
+  overflow: hidden;
+}
+
+.item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  color: var(--dsw-text, #e2e8f0);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.item:hover {
+  background: var(--dsw-surface-hover, #2a2a2a);
+}
+
+.itemCurrent {
+  color: var(--dsw-accent, #818cf8);
+  cursor: default;
+}

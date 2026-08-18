@@ -63,6 +63,10 @@ function scriptedApi(overrides: {
       cancel: r => ok(r, { accepted: true as const }),
       ...overrides.sessions,
     },
+    tenant: {
+      list: r => ok(r, { users: ['alice'], current: 'alice' }),
+      select: r => ok(r, { current: r.payload.userId }),
+    },
     subagents: {
       list: r => ok(r, { entries: [], parentAvailable: false }),
       history: r => ok(r, { events: [], hasMore: false }),

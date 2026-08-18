@@ -92,6 +92,8 @@ export interface RpcErrorDetailsMap {
   'subagent-not-resumable': { childSessionId: SessionId }
   'subagent-unauthorized': { childSessionId: SessionId }
   'subagent-delivery-unavailable': { childSessionId: SessionId }
+  /** A tenant.select named a user outside the declared simulated roster. */
+  'tenant-unknown-user': { userId: string }
   'internal': {}
 }
 

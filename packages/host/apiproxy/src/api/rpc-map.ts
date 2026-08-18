@@ -5,6 +5,7 @@
  */
 
 import type { SessionsApi } from './sessions.ts'
+import type { TenantApi } from './tenant.ts'
 import type { HostApi } from './host.ts'
 import type { WorkspaceApi } from './workspace.ts'
 import type { AgentPresetsApi } from './agent-presets.ts'
@@ -34,6 +35,8 @@ export interface RpcMethodMap {
   'session.attachment': SessionsApi['attachment']
   'session.updateQueue': SessionsApi['updateQueue']
   'session.cancel': SessionsApi['cancel']
+  'tenant.list': TenantApi['list']
+  'tenant.select': TenantApi['select']
   'subagent.list': SubagentsApi['list']
   'subagent.history': SubagentsApi['history']
   'subagent.prompt': SubagentsApi['prompt']

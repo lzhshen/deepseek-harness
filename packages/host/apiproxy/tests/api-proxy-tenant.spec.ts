@@ -67,6 +67,30 @@ describe('tenant listing isolation', () => {
     expect(await listIds(api)).toEqual([String(bobSession.id)])
   })
 
+  it('serves the tenant switch RPC and re-lists after a select', async () => {
+    const { ctx, api, attach } = await harness(true)
+    const aliceSession = ctx.sessions.create(undefined, { meta: { userId: 'alice' } })
+    attach(aliceSession)
+    const bobSession = ctx.sessions.create(undefined, { meta: { userId: 'bob' } })
+    attach(bobSession)
+
+    const listed = await api.tenant.list(request({}))
+    expect(listed.result.ok && listed.result.value).toEqual({ users: ['alice', 'bob'], current: 'alice' })
+
+    const selected = await api.tenant.select(request({ userId: 'bob' }))
+    expect(selected.result.ok && selected.result.value).toEqual({ current: 'bob' })
+
+    // The listing boundary reads the same current-user switch.
+    expect(await listIds(api)).toEqual([String(bobSession.id)])
+  })
+
+  it('rejects a tenant.select outside the roster', async () => {
+    const { api } = await harness(true)
+    const selected = await api.tenant.select(request({ userId: 'mallory' }))
+    expect(selected.result.ok).toBe(false)
+    if (!selected.result.ok) expect(selected.result.error.code).toBe('tenant-unknown-user')
+  })
+
   it('stays single-user (everything visible) without the tenant service', async () => {
     const { ctx, api, attach } = await harness(false)
     const bobSession = ctx.sessions.create(undefined, { meta: { userId: 'bob' } })

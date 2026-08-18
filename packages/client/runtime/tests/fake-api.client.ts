@@ -157,6 +157,16 @@ export class FakeApiClient implements IApiClient {
     cancel: (payload: unknown) => this.record('session.cancel', payload, this.onCancel(payload)),
   }
 
+  readonly tenant: IApiClient['tenant'] = {
+    list: (payload: unknown) => this.record('tenant.list', payload, Promise.resolve(ok({
+      users: ['alice', 'bob'],
+      current: 'alice',
+    }))),
+    select: (payload: unknown) => this.record('tenant.select', payload, Promise.resolve(ok({
+      current: (payload as { userId: string }).userId,
+    }))),
+  }
+
   onSubagentList: (payload: unknown) => Promise<RpcResponse<{ entries: never[]; parentAvailable: boolean }>>
     = () => Promise.resolve(ok({ entries: [], parentAvailable: true }))
   onSubagentHistory: (payload: unknown) => Promise<RpcResponse<{ events: never[]; hasMore: boolean }>>

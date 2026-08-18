@@ -57,6 +57,14 @@ export interface ISessions {
    */
   setSubagentCatalogOpen(parentSessionId: SessionId, open: boolean): void
   /**
+   * Refresh the real Session baseline, reusing an in-flight pull. The tenant
+   * switch calls this after a successful `tenant.select`: the baseline merge
+   * removes rows no longer visible to the new current user and adds that
+   * user's rows.
+   * @returns completion of the current or newly started baseline pull.
+   */
+  refresh(): Promise<void>
+  /**
    * Refresh one direct-child catalog.
    * @param parentSessionId - catalog owner.
    * @returns completion of the current or newly started refresh.

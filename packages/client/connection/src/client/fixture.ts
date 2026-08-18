@@ -2507,6 +2507,10 @@ function createFixtureWorld(options: FixtureOptions): FixtureWorld {
         return ok(request, { accepted: true as const })
       },
     },
+    tenant: {
+      list: request => Promise.resolve(ok(request, { users: ['alice', 'bob'], current: 'alice' })),
+      select: request => Promise.resolve(ok(request, { current: request.payload.userId })),
+    },
     subagents: {
       list: request => ok(request, { entries: [], parentAvailable: true }),
       history: (request) => {
@@ -3089,6 +3093,8 @@ export class FixtureApiClient extends AbstractApiClient {
       case 'session.attachment': return this.api.sessions.attachment(request)
       case 'session.updateQueue': return this.api.sessions.updateQueue(request)
       case 'session.cancel': return this.api.sessions.cancel(request)
+      case 'tenant.list': return this.api.tenant.list(request)
+      case 'tenant.select': return this.api.tenant.select(request)
       case 'subagent.list': return this.api.subagents.list(request)
       case 'subagent.history': return this.api.subagents.history(request)
       case 'subagent.prompt': return this.api.subagents.prompt(request, signal)

@@ -5,6 +5,7 @@
  */
 
 import type { SessionsApi } from './sessions.ts'
+import type { TenantApi } from './tenant.ts'
 import type { HostApi } from './host.ts'
 import type { WorkspaceApi } from './workspace.ts'
 import type { AgentPresetsApi } from './agent-presets.ts'
@@ -21,6 +22,7 @@ import type { ClientResponse, RpcReceipt } from './rpc.ts'
 /** Root interface of the unified API. New client-request domain = one new file pair + one field here + one map row. */
 export interface ApiProxy {
   sessions: SessionsApi
+  tenant: TenantApi
   subagents: SubagentsApi
   host: HostApi
   workspace: WorkspaceApi
@@ -47,6 +49,7 @@ export type {
   ModelReasoningEffort, ModelSelection, PromptContentPart, QueueAction, SessionModels,
   SessionListMetadata, SessionProjectionsBlock, SessionSearchItem, SessionsApi, SessionSummary,
 } from './sessions.ts'
+export type { TenantApi, TenantView } from './tenant.ts'
 export type { DirectoryEntry, DirectoryListing, HostApi } from './host.ts'
 export type {
   SubagentAddress, SubagentCatalog, SubagentInterruptReceipt, SubagentListEntry,

@@ -1857,6 +1857,11 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
     return { code: 'internal', message: 'settings service is absent: this deployment does not mount a settings provider (e.g. @deepseek-ai/dsh-settings-file) in its composition', details: {} }
   }
 
+  /** Missing-service report for the tenant domain: no current-user switch without the tenant service. */
+  function tenantAbsent(): RpcError {
+    return { code: 'internal', message: 'tenant service is absent: this deployment does not mount @deepseek-ai/dsh-tenant in its composition', details: {} }
+  }
+
   /** Open one Host-resolved target and map native failures onto the wire vocabulary. */
   async function openTarget(
     request: RpcRequest<unknown>, path: string, signal: AbortSignal,
@@ -2587,6 +2592,35 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         }
         agent.cancel({ kind: 'user' }, { keepInbox: true })
         return Promise.resolve(ok(request, { accepted: true as const }))
+      },
+    },
+
+    tenant: {
+      list(request) {
+        const tenant = ctx.get('tenant')
+        if (tenant === undefined) {
+          return Promise.resolve(err(request, tenantAbsent()))
+        }
+        return Promise.resolve(ok(request, {
+          users: [...tenant.listUsers()],
+          current: tenant.currentUserId(),
+        }))
+      },
+      select(request) {
+        const tenant = ctx.get('tenant')
+        if (tenant === undefined) {
+          return Promise.resolve(err(request, tenantAbsent()))
+        }
+        try {
+          tenant.selectUser(request.payload.userId)
+        } catch (error: unknown) {
+          return Promise.resolve(err(request, {
+            code: 'tenant-unknown-user',
+            message: error instanceof Error ? error.message : String(error),
+            details: { userId: request.payload.userId },
+          }))
+        }
+        return Promise.resolve(ok(request, { current: tenant.currentUserId() }))
       },
     },
 
