@@ -122,6 +122,18 @@ function fakeApi(overrides: Partial<{ muxFrames: MuxFrame[]; hostFrames: HostFra
           result: { ok: true, value: { userId: 'alice', sandboxId: 'sb-1', warm: false, file: '/s/a', content: 'x' } },
         }
       },
+      async poolStats(request) {
+        return {
+          rpcId: request.rpcId,
+          result: { ok: true, value: { warm: 0, bound: 0, idle: 0, reclaiming: 0, capacity: 4, reclaimTotal: 0 } },
+        }
+      },
+      async release(request) {
+        return { rpcId: request.rpcId, result: { ok: true, value: { released: false } } }
+      },
+      async reclaim(request) {
+        return { rpcId: request.rpcId, result: { ok: true, value: { reclaimed: 0 } } }
+      },
     },
     subagents: {
       async list(request) {

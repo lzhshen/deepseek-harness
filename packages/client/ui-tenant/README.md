@@ -6,6 +6,8 @@ Web multi-tenant identity switch plugin. Its browser half registers a floating c
 
 The switch is additive presentation: it composes into the frame without modifying the layout, sidebar, or conversation plugins, and the roster/current-user facts ride the `tenant.*` wire the host gateway serves. Without the host tenant service composed, both methods answer `internal` and the pill stays on its empty state.
 
+The same plugin adds two more additive `shell.overlay` entries: a "bind my sandbox" action that drives the pooled sandbox for the current user and echoes their sandbox id and file (design V2), and a read-only pool water-level panel that polls `tenant.poolStats` and renders warm/bound/idle/reclaiming plus the cumulative reclaim count (design V3).
+
 ## Model Experience
 
 None, as the current-user switch is browser-side identity presentation and nothing here reaches a model request.

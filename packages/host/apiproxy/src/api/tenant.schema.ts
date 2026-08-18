@@ -40,3 +40,35 @@ export const tenantStampValueSchema = z.object({
   file: z.string(),
   content: z.string(),
 }) satisfies z.ZodType<Wire<ResponseValue<'tenant.stamp'>>>
+
+/** tenant.poolStats request payload. */
+export const tenantPoolStatsRequestSchema = z.object({
+}) satisfies z.ZodType<Wire<RequestPayload<'tenant.poolStats'>>>
+
+/** tenant.poolStats response value. */
+export const tenantPoolStatsValueSchema = z.object({
+  warm: z.number().int().nonnegative(),
+  bound: z.number().int().nonnegative(),
+  idle: z.number().int().nonnegative(),
+  reclaiming: z.number().int().nonnegative(),
+  capacity: z.number().int().positive(),
+  reclaimTotal: z.number().int().nonnegative(),
+}) satisfies z.ZodType<Wire<ResponseValue<'tenant.poolStats'>>>
+
+/** tenant.release request payload. */
+export const tenantReleaseRequestSchema = z.object({
+}) satisfies z.ZodType<Wire<RequestPayload<'tenant.release'>>>
+
+/** tenant.release response value. */
+export const tenantReleaseValueSchema = z.object({
+  released: z.boolean(),
+}) satisfies z.ZodType<Wire<ResponseValue<'tenant.release'>>>
+
+/** tenant.reclaim request payload. */
+export const tenantReclaimRequestSchema = z.object({
+}) satisfies z.ZodType<Wire<RequestPayload<'tenant.reclaim'>>>
+
+/** tenant.reclaim response value. */
+export const tenantReclaimValueSchema = z.object({
+  reclaimed: z.number().int().nonnegative(),
+}) satisfies z.ZodType<Wire<ResponseValue<'tenant.reclaim'>>>

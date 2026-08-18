@@ -30,11 +30,29 @@ export interface TenantStampView {
   readonly content: string
 }
 
+/** Read-only pool water level for the panel (design V3). */
+export interface TenantPoolView {
+  /** Warm (prewarmed, unbound) sandboxes. */
+  readonly warm: number
+  /** Bound sandboxes. */
+  readonly bound: number
+  /** Idle (keep-alive countdown) sandboxes. */
+  readonly idle: number
+  /** Reclaiming sandboxes. */
+  readonly reclaiming: number
+  /** Pool capacity ceiling. */
+  readonly capacity: number
+  /** Cumulative sandboxes destroyed by reclaim / orphan / failed acquire. */
+  readonly reclaimTotal: number
+}
+
 /**
  * Tenant-domain unary methods (the map keys tenant.* of RpcMethodMap).
  * Selecting a user changes which sessions `session.list` returns — the client
  * re-pulls its list after a successful select. `stamp` drives the pooled
- * sandbox for the current user and echoes the user's sandbox/file (design V2).
+ * sandbox for the current user and echoes the user's sandbox/file (design V2);
+ * `poolStats`/`release`/`reclaim` feed the read-only water-level panel and the
+ * bind → idle → reclaim transition (design V3).
  */
 export interface TenantApi {
   /** Reads the simulated user roster and the current user. */
@@ -43,4 +61,10 @@ export interface TenantApi {
   select(request: RpcRequest<{ userId: string }>): Promise<RpcResponse<{ current: string }>>
   /** Binds the current user's sandbox, writes a stamp file under their directory, and echoes it. */
   stamp(request: RpcRequest<{}>): Promise<RpcResponse<TenantStampView>>
+  /** Reads the current pool water level. */
+  poolStats(request: RpcRequest<{}>): Promise<RpcResponse<TenantPoolView>>
+  /** Releases the current user's binding into the idle countdown (simulate leave). */
+  release(request: RpcRequest<{}>): Promise<RpcResponse<{ released: boolean }>>
+  /** Runs one idle-reclaim tick (destroy expired idle sandboxes and refill). */
+  reclaim(request: RpcRequest<{}>): Promise<RpcResponse<{ reclaimed: number }>>
 }

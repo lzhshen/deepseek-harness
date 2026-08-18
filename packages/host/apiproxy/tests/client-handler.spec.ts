@@ -67,6 +67,9 @@ function scriptedApi(overrides: {
       list: r => ok(r, { users: ['alice'], current: 'alice' }),
       select: r => ok(r, { current: r.payload.userId }),
       stamp: r => ok(r, { userId: 'alice', sandboxId: 'sb-1', warm: false, file: '/storage/alice/tenant-stamp.txt', content: 'x' }),
+      poolStats: r => ok(r, { warm: 0, bound: 0, idle: 0, reclaiming: 0, capacity: 4, reclaimTotal: 0 }),
+      release: r => ok(r, { released: false }),
+      reclaim: r => ok(r, { reclaimed: 0 }),
     },
     subagents: {
       list: r => ok(r, { entries: [], parentAvailable: false }),

@@ -6,6 +6,8 @@ Web 多租户身份切换插件。浏览器半把一个浮动的"当前用户"�
 
 切换是纯加性呈现：它挂进框架而不改 layout、sidebar、conversation 任何插件，身份组/当前用户事实走宿主网关提供的 `tenant.*` wire。未组合宿主 tenant 服务时，两个方法都答 `internal`，胶囊停在空态。
 
+同一插件再加两个加性 `shell.overlay` 条目："绑定我的沙箱"动作驱动当前用户的池化沙箱并回显其沙箱 id 与文件（设计 V2），以及一个只读池水位面板轮询 `tenant.poolStats` 呈现 warm/bound/idle/reclaiming 与累计回收计数（设计 V3）。
+
 ## Model Experience
 
 无；当前用户切换是浏览器侧身份呈现，没有任何内容进入模型请求。

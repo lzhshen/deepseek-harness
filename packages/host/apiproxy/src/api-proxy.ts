@@ -1862,6 +1862,20 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
     return { code: 'internal', message: 'tenant service is absent: this deployment does not mount @deepseek-ai/dsh-tenant in its composition', details: {} }
   }
 
+  /** The optional pooled-sandbox owner (stat/release/reclaim), or undefined when not composed. */
+  function poolService(): {
+    stats(): { warm: number; bound: number; idle: number; reclaiming: number; capacity: number; reclaimTotal: number }
+    release(userId: string): boolean
+    reclaim(): Promise<number>
+  } | undefined {
+    return ctx.get('pool') as ReturnType<typeof poolService>
+  }
+
+  /** Missing-service report for the pool water-level surface. */
+  function poolAbsent(): RpcError {
+    return { code: 'internal', message: 'pool service is absent: this deployment does not mount @deepseek-ai/dsh-pool-dsh in its composition', details: {} }
+  }
+
   /** Open one Host-resolved target and map native failures onto the wire vocabulary. */
   async function openTarget(
     request: RpcRequest<unknown>, path: string, signal: AbortSignal,
@@ -2648,6 +2662,41 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
           })
         } catch (error: unknown) {
           return err(request, { code: 'internal', message: `tenant stamp failed: ${String(error)}`, details: {} })
+        }
+      },
+      poolStats(request) {
+        const pool = poolService()
+        if (pool === undefined) {
+          return Promise.resolve(err(request, poolAbsent()))
+        }
+        const stats = pool.stats()
+        return Promise.resolve(ok(request, {
+          warm: stats.warm,
+          bound: stats.bound,
+          idle: stats.idle,
+          reclaiming: stats.reclaiming,
+          capacity: stats.capacity,
+          reclaimTotal: stats.reclaimTotal,
+        }))
+      },
+      release(request) {
+        const pool = poolService()
+        if (pool === undefined) {
+          return Promise.resolve(err(request, poolAbsent()))
+        }
+        const userId = ctx.get('tenant')?.currentUserId() ?? 'anonymous'
+        return Promise.resolve(ok(request, { released: pool.release(userId) }))
+      },
+      async reclaim(request) {
+        const pool = poolService()
+        if (pool === undefined) {
+          return err(request, poolAbsent())
+        }
+        try {
+          const reclaimed = await pool.reclaim()
+          return ok(request, { reclaimed })
+        } catch (error: unknown) {
+          return err(request, { code: 'internal', message: `tenant reclaim failed: ${String(error)}`, details: {} })
         }
       },
     },

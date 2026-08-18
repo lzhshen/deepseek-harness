@@ -16,9 +16,12 @@ import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type { ConnectionHandle } from '@deepseek-ai/dsh-api-remotes/client'
 import type { TenantSwitcherInjected } from './TenantSwitcher.tsx'
 import { TenantSwitcher } from './TenantSwitcher.tsx'
+import type { PoolPanelInjected } from './PoolPanel.tsx'
+import { PoolPanel } from './PoolPanel.tsx'
 import { en, zh, type TenantKey } from './locales.ts'
 
 export type { TenantSwitcherInjected, TenantSwitcherProps } from './TenantSwitcher.tsx'
+export type { PoolPanelInjected, PoolPanelProps, PoolSnapshot } from './PoolPanel.tsx'
 export type { TenantKey } from './locales.ts'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
@@ -80,4 +83,31 @@ export function apply(ctx: ClientContext): void {
       }
     },
   }, TenantSwitcher))
+
+  // The read-only water-level panel (design V3), a second overlay entry
+  // polling the pool live.
+  ctx.slots.inject('shell.overlay', () => ctx.slots.register({
+    name: 'shell.overlay',
+    id: 'pool-panel',
+    order: 2,
+    locale: NS,
+    inject: (): PoolPanelInjected => {
+      const connection = ctx.get('connection') as ConnectionHandle
+      return {
+        intervalMs: 2000,
+        stats: async () => {
+          const response = await connection.api.tenant.poolStats({})
+          if (!response.result.ok) throw new Error(response.result.error.message)
+          return {
+            warm: response.result.value.warm,
+            bound: response.result.value.bound,
+            idle: response.result.value.idle,
+            reclaiming: response.result.value.reclaiming,
+            capacity: response.result.value.capacity,
+            reclaimTotal: response.result.value.reclaimTotal,
+          }
+        },
+      }
+    },
+  }, PoolPanel))
 }

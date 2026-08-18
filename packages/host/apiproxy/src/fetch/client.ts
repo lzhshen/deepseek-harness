@@ -35,6 +35,9 @@ import {
   tenantListViewSchema,
   tenantSelectValueSchema,
   tenantStampValueSchema,
+  tenantPoolStatsValueSchema,
+  tenantReleaseValueSchema,
+  tenantReclaimValueSchema,
 } from '../api/tenant.schema.ts'
 import {
   workspaceArchiveSessionValueSchema,
@@ -108,6 +111,9 @@ export interface IApiClient {
     list(payload: RequestPayload<'tenant.list'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'tenant.list'>>>
     select(payload: RequestPayload<'tenant.select'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'tenant.select'>>>
     stamp(payload: RequestPayload<'tenant.stamp'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'tenant.stamp'>>>
+    poolStats(payload: RequestPayload<'tenant.poolStats'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'tenant.poolStats'>>>
+    release(payload: RequestPayload<'tenant.release'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'tenant.release'>>>
+    reclaim(payload: RequestPayload<'tenant.reclaim'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'tenant.reclaim'>>>
   }
   subagents: {
     list(payload: RequestPayload<'subagent.list'>, signal?: AbortSignal): Promise<RpcResponse<ResponseValue<'subagent.list'>>>
@@ -195,6 +201,9 @@ const UNARY_VALUE_SCHEMAS: { [K in keyof RpcMethodMap]: z.ZodType<Wire<ResponseV
   'tenant.list': tenantListViewSchema,
   'tenant.select': tenantSelectValueSchema,
   'tenant.stamp': tenantStampValueSchema,
+  'tenant.poolStats': tenantPoolStatsValueSchema,
+  'tenant.release': tenantReleaseValueSchema,
+  'tenant.reclaim': tenantReclaimValueSchema,
   'subagent.list': subagentListValueSchema,
   'subagent.history': subagentHistoryValueSchema,
   'subagent.prompt': subagentPromptValueSchema,
@@ -441,6 +450,9 @@ export abstract class AbstractApiClient implements IApiClient {
     list: (payload, signal) => this.callUnary('tenant.list', payload, signal),
     select: (payload, signal) => this.callUnary('tenant.select', payload, signal),
     stamp: (payload, signal) => this.callUnary('tenant.stamp', payload, signal),
+    poolStats: (payload, signal) => this.callUnary('tenant.poolStats', payload, signal),
+    release: (payload, signal) => this.callUnary('tenant.release', payload, signal),
+    reclaim: (payload, signal) => this.callUnary('tenant.reclaim', payload, signal),
   }
 
   readonly subagents: IApiClient['subagents'] = {

@@ -145,6 +145,18 @@ export class PoolRuntime extends Service {
   async refill(): Promise<number> {
     return this.manager.refillTick()
   }
+
+  /**
+   * Run one idle-reclaim tick: destroy IDLE sandboxes whose keep-alive
+   * countdown expired and refill the warm pool. The production pool runs this
+   * on a timer; the POC exposes it so the water-level panel can show the
+   * bind → idle → reclaim transition without waiting for real wall-clock.
+   * @returns how many sandboxes were reclaimed.
+   */
+  async reclaim(): Promise<number> {
+    const outcome = await this.manager.reclaimTick()
+    return outcome.reclaimed
+  }
 }
 
 export default PoolRuntime

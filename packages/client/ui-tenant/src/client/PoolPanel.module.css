@@ -1,0 +1,42 @@
+/* Read-only pool water-level panel, anchored bottom-right so it does not
+ * collide with the tenant-switch pill (top-right). Semantic tokens only. */
+.root {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  z-index: var(--dsw-z-overlay, 1000);
+  min-width: 160px;
+  padding: 10px 12px;
+  border: 1px solid var(--dsw-border, #333);
+  border-radius: 8px;
+  background: var(--dsw-surface, #1e1e1e);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 40%);
+  color: var(--dsw-text, #e2e8f0);
+  font-size: 12px;
+}
+
+.title {
+  font-weight: 600;
+  margin-bottom: 6px;
+  opacity: 0.8;
+}
+
+.empty {
+  opacity: 0.6;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.row span:last-child {
+  font-variant-numeric: tabular-nums;
+}

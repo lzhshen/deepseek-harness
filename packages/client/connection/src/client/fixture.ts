@@ -2513,6 +2513,11 @@ function createFixtureWorld(options: FixtureOptions): FixtureWorld {
       stamp: request => Promise.resolve(ok(request, {
         userId: 'alice', sandboxId: 'fx-sandbox', warm: false, file: '/tmp/fixture/alice/tenant-stamp.txt', content: 'fixture stamp',
       })),
+      poolStats: request => Promise.resolve(ok(request, {
+        warm: 0, bound: 0, idle: 0, reclaiming: 0, capacity: 6, reclaimTotal: 0,
+      })),
+      release: request => Promise.resolve(ok(request, { released: false })),
+      reclaim: request => Promise.resolve(ok(request, { reclaimed: 0 })),
     },
     subagents: {
       list: request => ok(request, { entries: [], parentAvailable: true }),
@@ -3099,6 +3104,9 @@ export class FixtureApiClient extends AbstractApiClient {
       case 'tenant.list': return this.api.tenant.list(request)
       case 'tenant.select': return this.api.tenant.select(request)
       case 'tenant.stamp': return this.api.tenant.stamp(request)
+      case 'tenant.poolStats': return this.api.tenant.poolStats(request)
+      case 'tenant.release': return this.api.tenant.release(request)
+      case 'tenant.reclaim': return this.api.tenant.reclaim(request)
       case 'subagent.list': return this.api.subagents.list(request)
       case 'subagent.history': return this.api.subagents.history(request)
       case 'subagent.prompt': return this.api.subagents.prompt(request, signal)

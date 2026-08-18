@@ -138,6 +138,11 @@ export class FakeApiClient implements IApiClient {
       file: '/storage/alice/tenant-stamp.txt',
       content: 'x',
     }))),
+    poolStats: (payload: unknown) => this.record('tenant.poolStats', payload, Promise.resolve(ok({
+      warm: 0, bound: 0, idle: 0, reclaiming: 0, capacity: 4, reclaimTotal: 0,
+    }))),
+    release: (payload: unknown) => this.record('tenant.release', payload, Promise.resolve(ok({ released: false }))),
+    reclaim: (payload: unknown) => this.record('tenant.reclaim', payload, Promise.resolve(ok({ reclaimed: 0 }))),
   }
 
   readonly subagents: IApiClient['subagents'] = {
