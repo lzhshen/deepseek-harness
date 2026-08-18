@@ -51,6 +51,10 @@
 
 ## 1.3 POC 验收标准
 
+验收分两组：**M 组（容量/性能）** 回答"规模化后撑不撑得住"，依赖真实 K8s/PG/模型环境，POC 内只落测量装置、数值留待真环境标定；**V 组（可体验验收）** 回答"多租户这套东西还能不能用 dsh 的 plugin 机制搭出来"，可在本机 `pnpm dsh web` 页面直观判定，是 POC 的两个目标（①多用户 ②共享资源池）的用户感知级验收，也是 D12 的直接落地。
+
+### M 组：容量 / 性能（需真实环境，POC 留装置）
+
 | # | 指标 | 目标 | 测量方式 |
 |---|---|---|---|
 | M1 | 同等预算并发容量 | 等比缩小的 POC 集群压出稳态并发数，线性外推到 2500C ≥ 5000 并发（即同等预算支撑注册用户数 ≥ 老模式 100 倍，按 5% 并发率折算） | 压测模拟器稳态加压，记录崩溃/劣化拐点 |
@@ -59,13 +63,26 @@
 | M4 | 引擎密度实测 | 单大脑进程稳态并发会话数 ≥ 500（支撑 M1 的容量模型） | 单进程加压实验 |
 | M5 | 沙箱规格校准 | 真实办公任务在 0.25C / 0.5C / 1C 三档下的耗时对比，确定容量规划的规格基线 | 三档对照实验 |
 
+### V 组：可体验验收（本机 `pnpm dsh web` 页面判定，POC 内做完）
+
+V 组分三条，一一对应 D12 要保证的三种 plugin 形态。共同的验收前提是 **V0（多用户身份链路）**：宿主侧新增 tenant 插件，让会话带 `userId` 归属、`ctx.sessions.list()` 按用户隔离——它是后三条的前置空心粮草，没有它页面再花哨也是单用户。
+
+| # | 对应 plugin 形态 | 验收描述 | 通过判据（用户感知级） |
+|---|---|---|---|
+| V0 | ——（前提） | 宿主侧身份链路：会话带用户归属，列表按用户隔离 | 两个用户各建会话后互不可见对方的会话 |
+| V1 | 纯前端 plugin | 新增 client UI 插件：页面可切换/显示"当前用户"，会话列表按用户过滤分组 | 打开 `dsh web` 一眼可见"这不是单用户，是有归属的多路会话" |
+| V2 | 前后端都有的 plugin | 一个插件两半各归其位：前端触发动作 → 后端按该身份绑沙箱、读写该用户目录 → 前端回显产物 | 页面上切换用户、发任务，能看到该用户的沙箱/文件是该用户专属的 |
+| V3 | 纯后端 plugin | 宿主侧 pool/tenant 插件 + 池状态机，前端加一个只读水位面板呈现 | 页面上看到沙箱 bind/reclaim 随用户切换、离开、回访实时变化（目标②的页面验收） |
+
+> **V 组与 M 组的分工**：V 组验证的是"多租户 + plugin 机制"这个**地基命题**（能不能搭上、能不能用它验收），M 组验证的是"搭上之后规模化撑不撑得住"。V 组在 POC 内即可判通过/不通过；M1/M2/M4/M5 的数值需真实集群（见[验证报告](workbuddy-pool-poc-verification.md)的实测口径说明），POC 只把测量装置做对。
+
 ---
 
 # 2 系统总体设计
 
 ## 2.1 系统上下文与架构总览
 
-系统由四个部分组成：Web 接入（复用 dsh web-app）、大脑集群（多租户 dsh 引擎）、池管理器（新写）、沙箱池（K8s Pod + 新 Provider）。用户状态落在两个基础设施上：会话存档入 PostgreSQL，用户文件入 CFS。
+系统由四个部分组成：Web 接入（复用 dsh web-app，前端 UI 用 client 插件树，D12）、大脑集群（多租户 dsh 引擎）、池管理器（新写）、沙箱池（K8s Pod + 新 Provider）。用户状态落在两个基础设施上：会话存档入 PostgreSQL，用户文件入 CFS。
 
 ```mermaid
 %%{init: {'theme':'dark', 'themeVariables': {'fontSize':'14px'}}}%%
@@ -78,7 +95,7 @@ GW["企业网关<br/>（POC：模拟身份头）"]
 %% ========== 中间：本平台 ==========
 subgraph Platform["多租户智能体办公平台"]
     direction TB
-    BFF["① Web 接入 / BFF<br/>（dsh web-app + API 网关）"]
+    BFF["① Web 接入 / BFF<br/>（dsh web-app + client 插件树 UI）"]
     Engine["② 大脑集群<br/>（多租户 dsh 引擎 ×N）"]
     Pool["③ 池管理器<br/>（独立服务，全局一本账）"]
     Sandboxes["④ 沙箱池<br/>（预热 K8s Pod ×M）"]
@@ -120,7 +137,7 @@ class PG,CFS,K8s infra
 
 | 服务/模块 | 定位 | 核心职责 |
 |---|---|---|
-| **① Web 接入 / BFF** | 接入面，无状态 | 会话与文件的对外 API；事件流推送；透传网关注入的用户身份；复用 dsh web-app 与 API 网关 |
+| **① Web 接入 / BFF** | 接入面，无状态 | 会话与文件的对外 API；事件流推送；透传网关注入的用户身份；复用 dsh web-app 与 API 网关，**前端 UI 整体复用 dsh 的 client 插件树，不另起炉灶**（D12） |
 | **② 大脑集群** | 对话引擎，无状态多副本 | 多租户会话的唤醒/驻留/驱逐；对话循环与工具编排；向池管理器申请沙箱；会话存档读写 |
 | **③ 池管理器** | 调度核心，独立部署 | 沙箱账本（谁绑了哪个）；空闲回收倒计时；预热池补水；大脑宕机后的孤儿沙箱收尸 |
 | **④ 沙箱池** | 执行环境 | 预热 K8s Pod，绑定后挂载所属用户的 CFS 目录；承载文件读写与命令执行（办公工具链） |
@@ -279,14 +296,18 @@ deepseek-harness/（精简）
 └── design-docs/       # 本文档与决策记录
 ```
 
-| 服务/模块 | 实际目录 | 说明 |
-|---|---|---|
-| ① Web 接入/BFF | `packages/bundle/web-app`、`packages/api/`（gateway + remotes） | 复用；新增身份头透传配置 |
-| ② 大脑集群 | `packages/core/`（引擎本体）+ `packages/tenant/`（规划：身份与驻留插件） | 引擎不改核心，多租户能力以插件挂载 |
-| ③ 池管理器 | `packages/pool/`（规划） | 独立服务 + 引擎端 pool-client 插件 |
-| ④ 沙箱池 | `packages/sandbox-k8s/`（规划，参照 `packages/e2b/` 的 seam 组合） | fs/subprocess seam 的 K8s Pod 实现 |
-| 会话存档 | `packages/session/session-persistence`（seam）+ `packages/session-persistence-pg/`（规划） | 复用写协调器，只实现存储钩子 |
-| 压测模拟器 | `examples/load-sim/`（规划） | 独立工具，经对外接口驱动 |
+| 服务/模块 | 实际目录 | 归属 cordis 树 | 说明 |
+|---|---|---|---|
+| ① Web 接入/BFF | `packages/bundle/web-app`、`packages/api/`（gateway + remotes）、`apps/web` + `packages/client/**`（前端 UI 插件树） | **两者**（host 半 = BFF/网关；client 半 = 前端 UI） | 复用；前端 UI 整体复用 dsh client 插件树（`packages/client/**`），骨架插件零改动，仅新增按租户过滤的业务 UI 插件；宿主侧新增身份头透传配置（D12） |
+| ② 大脑集群 | `packages/core/`（引擎本体）+ `packages/tenant/`（规划：身份与驻留插件） | **host** | 引擎不改核心，多租户能力以插件挂载 |
+| ③ 池管理器 | `packages/pool/`（规划） | **独立服务**（池管理器进程）+ **host**（引擎端 pool-client 插件） | 独立服务 + 引擎端 pool-client 插件 |
+| ④ 沙箱池 | `packages/sandbox-k8s/`（规划，参照 `packages/e2b/` 的 seam 组合） | **host** | fs/subprocess seam 的 K8s Pod 实现 |
+| 会话存档 | `packages/session/session-persistence`（seam）+ `packages/session-persistence-pg/`（规划） | **host** | 复用写协调器，只实现存储钩子 |
+| 压测模拟器 | `examples/load-sim/`（规划） | **独立服务** | 独立工具，经对外接口驱动 |
+
+> **前端 UI 的复用结论（D12）**：dsh 的浏览器 GUI 本身就是「第二个 cordis 插件树」——`packages/client/**` 下每个 `ui-*` 包都是一个自带 UI 的插件，经 slot（插槽）机制组装成界面，宿主按 manifest 以 `GET /plugins/<id>/client.js` 按需分发 bundle，`apps/web` 只是一个薄薄 Vite 壳（`main.ts` 仅 `new AppWebEntry(el).run()`）。因此**本方案的前端不独立开发**：UI 骨架插件（sidebar / conversation / tool / goal / layout 等，占现有界面 90%+）零改动；多租户带来的新界面以**新增 UI 插件**挂进现有 slot（按租户过滤的会话列表、文件面板、任务进度/产物回放）。「多租户」不属于 UI 插件职责，落在宿主侧（`packages/tenant/`，规划）：dsh 现有 `identity` 仅为匿名非认证关联 ID，`ctx.sessions.list()` 全局无归属隔离，会话标头无租户字段——三者都由本方案新增。唯一的架构警觉点是「插件树全局一份」与「会话按用户隔离」分属 composition 与 tenancy 两层，per-session 状态不得漏进全局插件树。
+
+> **「归属 cordis 树」判定口诀**：① 有模型/工具/存储/身份逻辑 → host 半（进大脑集群）；② 用户要在页面看到/操作 → client 半（进前端）；③ 两者都有 → 同一包两半各归其位；④ 独立常驻服务（调度/账本/压测）→ 不进任何树，独立部署。「装一个插件」在架构图上往往不是单一一个框：host 半进「大脑集群」，client 半进「Web 接入前端」，manifest 是粘合剂。
 
 ---
 
@@ -381,6 +402,8 @@ Res->>PC: acquire（绑定键=userId）
 PC-->>Res: 沙箱 endpoint
 Note over Res: 开始任务循环（2.3(a) 主流程）
 ```
+
+> **分层边界（呼应 D12）**：引擎（大脑进程）是纯后端，不承载前端 UI。浏览器 GUI 由 dsh 的 client 插件树在**每个用户浏览器里各拉一份**运行，经 BFF 的 RPC + 事件流桥接到引擎；多租户身份解析（`resolveTenant`）发生在引擎这一侧，UI 骨架插件对此无感知。「插件树全局一份（composition）」与「会话按用户隔离（tenancy）」分属两层，引擎只维护后者——per-session 状态落在 session scope，绝不进入全局插件树。
 
 ## 3.2 池管理器
 

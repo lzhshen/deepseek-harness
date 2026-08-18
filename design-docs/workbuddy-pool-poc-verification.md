@@ -101,12 +101,24 @@ M5 spec: 0.25C=235806ms, 0.5C=117903ms, 1C=58952ms.
 | D8 大脑无状态、任意副本唤醒 | `ResidencyRegistry.claim` 的重定向语义 + 会话驻留登记，为 PG 行级认领留了同一契约 |
 | D9 池管理器独立部署、全局一本账 | `PoolManager` 单所有者 + `PoolLedger` 契约（内存/PG 两实现） |
 | D10 按人绑定、绑定键可配置 | `BindingKey` 抽象键，POC 取值 = 用户 id，账本不看键内容 |
-| D11 用户文件按目录隔离 | `PodFactory.mount(sandboxId, userId)` 挂载语义，假工厂记录挂载关系 |
+| D11 用户文件按目录隔离 | `PodFactory.mount(sandboxId, userId)` 挂载语义，假工厂记录挂载关系；`dsh-pool-dsh` 的 fs/subprocess Provider 把路径路由进 `storageRoot/<userId>/` |
+
+## 4.1 DSH 组装（纯库 → 服务的补证）
+
+原报告第 1 节的三个包都是纯库，未验证"是否能长在 DSH 上"。新增 `packages/pool/pool-dsh` 补上这一层：
+
+| 组件 | 落地 | 验证了什么 |
+|---|---|---|
+| `ctx.pool` 服务 | `PoolRuntime extends Service` | 把纯 `PoolManager` 装进 Cordis 服务，暴露 `acquire/release/heartbeat/stats/refill`（引擎侧 pool-client 视图），池状态机在真实上下文跑通 |
+| `ctx.fs` Provider | `PoolFileSystem extends LocalFileSystem` | 注入 `ctx.pool` 与池在同一上下文组合，`config.cwd` 即调用方池化用户目录（D11 隔离基座） |
+| `ctx.subprocess` Provider | `PoolSubprocess extends LocalSubprocessRuntime` | 子进程 cwd 路由进调用方用户目录，真实 spawn + 真实 stdout/exit |
+
+该组装以 keyless 单测驱动真实 Cordis 上下文（`new Context()` + `ctx.plugin(...)`），断言池状态机经 `ctx.pool` 走通、文件与命令真实落进按用户隔离的目录——即设计 3.3"挂上新 Provider 整体迁入沙箱"的地基链路。**仍非真实环境验证**：假 Pod 工厂、内存账本、无真实模型，`spawnTerminal` 未实现（见第 5 节）。
 
 ## 5 落地剩余工作（生产化路径，非 POC 阻塞）
 
 1. `PodFactory` 的 K8s 实现（预热 Deployment + CFS subPath 挂载 + 沙箱内轻量 agent 镜像），替换 `FakePodFactory`。
 2. `PoolLedger` 的 PG 实现（`UPDATE ... WHERE state='WARM'` 行级原子认领），替换 `MemoryLedger`。
 3. `SessionPersistence` 的 PG 后端（复用 dsh 既有写协调器，只实现存储钩子），接入真实存档。
-4. 引擎端 `pool-client` / `tenant` 两个 Cordis 插件（把本报告的纯库挂到 dsh 的 `ctx` 与事件上）。
+4. 引擎端 `pool-client` / `tenant` 两个 Cordis 插件（`pool-dsh` 已落下 `ctx.pool` 服务与 seam Provider 的原型；生产再把逐会话 acquire 接入引擎循环，并拆 `dsh-pool-dsh` 为服务/fs/subprocess 姊妹包镜像 e2b 三件套）。
 5. 用真实模型 + 真实办公任务跑 M5 标定，再把标定系数回填模拟器，跑真实集群的 M1/M2/M4。
