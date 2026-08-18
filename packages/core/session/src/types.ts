@@ -96,6 +96,15 @@ export interface SessionHeader {
    * would replay history the model can no longer act on.
    */
   readonly agentPreset?: string
+  /**
+   * The owning tenant user's opaque id, stamped at creation by the tenant
+   * plugin and persisted with the header. Absent for sessions created before
+   * tenancy was composed, or created outside the tenant pipeline (subagent
+   * children and forks inherit their owner's id; a caller may omit it). This is
+   * attribution metadata, not proof of authority — tenant isolation is enforced
+   * at the listing boundary, never by this field's presence alone.
+   */
+  readonly userId?: string
 }
 
 /**
@@ -118,6 +127,7 @@ export interface CreateSessionOptions {
     readonly origin?: 'subagent'
     readonly delegationDepth?: number
     readonly agentPreset?: string
+    readonly userId?: string
   }
 }
 

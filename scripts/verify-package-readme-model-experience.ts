@@ -36,6 +36,7 @@ const NO_MODEL_EXPERIENCE_SECTION: Readonly<Record<string, string>> = {
   'packages/util/launch-environment': 'The package only resolves host environment values; model-facing consumers own any rendered use.',
   'packages/pool/pool': 'Pure sandbox-pool scheduling and ledger library; registers nothing model-facing.',
   'packages/tenant/tenant-residency': 'Pure session-residency registry; registers nothing model-facing.',
+  'packages/tenant/tenant': 'Host-side tenant identity service; stamps session attribution and isolates listings, registers nothing model-facing.',
   'packages/loadsim/loadsim': 'Pure off-line load simulator and report generator; runs outside any agent runtime and touches no model request.',
 }
 

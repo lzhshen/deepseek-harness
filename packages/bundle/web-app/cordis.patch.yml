@@ -94,6 +94,18 @@
     - id: plugin-inventory
       name: '@deepseek-ai/dsh-host-plugin-inventory'
 
+    # Multi-tenant identity (POC simulated roster, design D7): stamps each new
+    # session with the current user's id and the api-gateway lists only that
+    # user's sessions. Production swaps the roster resolution for the
+    # SSO-injected header without changing the downstream attribution face.
+    - id: tenant
+      name: '@deepseek-ai/dsh-tenant'
+      config:
+        users:
+          - alice
+          - bob
+        defaultUserId: alice
+
     # The API gateway: the transport-agnostic dispatch face every client shape
     # shares. The base layer's agent-default-model service owns the default model.
     - id: api-gateway

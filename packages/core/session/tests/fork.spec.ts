@@ -76,6 +76,26 @@ describe('SessionStore.fork', () => {
     })
   })
 
+  it('stamps the owning userId on the header and inherits it through a fork', async () => {
+    const { ctx, sessions } = await setup()
+    const source = ctx.sessions.create(SessionId('owned-parent'), { meta: { userId: 'alice' } })
+
+    expect(source.header.userId).toBe('alice')
+
+    const child = sessions.fork(source, undefined, SessionId('owned-child'))
+    expect(child.header.userId).toBe('alice')
+  })
+
+  it('leaves userId unset when not supplied, and a fork of it stays unowned', async () => {
+    const { ctx, sessions } = await setup()
+    const source = ctx.sessions.create(SessionId('unowned-parent'))
+
+    expect(source.header.userId).toBeUndefined()
+
+    const child = sessions.fork(source, undefined, SessionId('unowned-child'))
+    expect(child.header.userId).toBeUndefined()
+  })
+
   it('forks the latest completed boundary by default into detached frozen seed events', async () => {
     const { ctx, sessions } = await setup()
     const source = ctx.sessions.create(SessionId('parent'), { meta: { cwd: '/workspace' } })

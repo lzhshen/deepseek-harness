@@ -163,6 +163,7 @@
     { "path": "./packages/pool/pool" },
     { "path": "./packages/pool/pool-dsh" },
     { "path": "./packages/tenant/tenant-residency" },
+    { "path": "./packages/tenant/tenant" },
     { "path": "./packages/loadsim/loadsim" },
     { "path": "./packages/session/session-telemetry-otel" },
     { "path": "./packages/core/system-prompt" },

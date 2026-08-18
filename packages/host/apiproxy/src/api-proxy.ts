@@ -88,6 +88,9 @@ import type { ApprovalOutcome, ApprovalRequestId } from '@deepseek-ai/dsh-user-a
 // Side-effect type import: resolves the `approval/request` waterfall and
 // `ctx.get('approval')` without a value dependency on the seam (optional composition).
 import type {} from '@deepseek-ai/dsh-user-approval'
+// Type-only: resolves `ctx.get('tenant')` (the optional current-user service)
+// without a value dependency — tenant isolation is an opt-in composition.
+import type {} from '@deepseek-ai/dsh-tenant'
 import { approvalResponsePayloadSchema } from './api/approvals.schema.ts'
 import { imageLimitsProjectionSchema, sessionListMetadataProjectionSchema } from './api/sessions.schema.ts'
 import { questionResponsePayloadSchema } from './api/questions.schema.ts'
@@ -506,6 +509,7 @@ function sessionListFields(header: SessionHeader, events: readonly SessionEvent[
   origin?: 'subagent'
   cwd?: string
   agentPreset?: string
+  userId?: string
 } {
   // The preset comes from the log, not the header: a session that switched
   // while blank ran its turns under the newer composition, and a picker
@@ -516,6 +520,7 @@ function sessionListFields(header: SessionHeader, events: readonly SessionEvent[
     ...header.origin === undefined ? {} : { origin: header.origin },
     ...header.cwd === undefined ? {} : { cwd: header.cwd },
     ...agentPreset === undefined ? {} : { agentPreset },
+    ...header.userId === undefined ? {} : { userId: header.userId },
   }
 }
 
@@ -1084,6 +1089,8 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
   }
   type WebModelSelectionRef = ModelSelectionRef & { current: ModelSelection }
   const selections = new WeakMap<Agent, WebModelSelectionRef>()
+  /** Current tenant user, or undefined when the tenant service is not composed (single-user). */
+  const currentUserId = (): string | undefined => ctx.get('tenant')?.currentUserId()
   /**
    * Serializes `agentPreset.select` per session. Two concurrent selects both
    * pass the blank check, and the second `unmountPresetFor` then finds nothing
@@ -1636,12 +1643,14 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
           throw new Error(`failed to ensure project directory "${cwd}": ${String(error)}`, { cause: error })
         }
         const composition = await composeAgent(presetId)
+        const ownerId = currentUserId()
         return (await ctx.agents.create({
           sessionId,
           agentOptions: agentOptions(),
           meta: {
             cwd,
             ...composition.agentPreset === undefined ? {} : { agentPreset: composition.agentPreset },
+            ...ownerId === undefined ? {} : { userId: ownerId },
           },
           setup: composition.setup,
         })).agent
@@ -1693,6 +1702,11 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
    */
   async function listVisibleSessionSummaries(signal?: AbortSignal): Promise<SessionSummary[]> {
     signal?.throwIfAborted()
+    // Tenant isolation: when the tenant service is composed, only the current
+    // user's sessions are listed. Sessions with no stamped userId are unowned
+    // and also hidden from a tenant-isolated listing; without the service the
+    // listing stays single-user (every session visible) as before.
+    const userId = ctx.get('tenant')?.currentUserId()
     const summarizeAttached = (session: Session): SessionSummary => {
       const agent = ctx.agents.get(session.id)
       const projections = listProjectionsFor(ctx, session.header, session)
@@ -1701,13 +1715,16 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         ...projections === undefined ? {} : { projections },
       }
     }
-    const items = ctx.sessions.list().map(summarizeAttached)
+    const items = ctx.sessions.list()
+      .filter(session => userId === undefined || session.header.userId === userId)
+      .map(summarizeAttached)
     signal?.throwIfAborted()
     const attached = new Set(items.map(item => item.sessionId))
     const persistence = ctx.get('sessionPersistence')
     if (persistence !== undefined) {
       const cold = (await persistence.list(signal))
         .filter(meta => !attached.has(meta.id) && meta.cwd !== undefined)
+        .filter(meta => userId === undefined || meta.userId === userId)
       signal?.throwIfAborted()
       for (let offset = 0; offset < cold.length; offset += COLD_SUMMARY_BATCH_SIZE) {
         signal?.throwIfAborted()

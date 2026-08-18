@@ -208,6 +208,13 @@ export interface SessionSummary {
    */
   agentPreset?: string
   /**
+   * The owning tenant user id stamped at creation (header passthrough);
+   * absent for sessions created before tenancy was composed, or outside the
+   * tenant pipeline. Listing isolation keys on this field; a session without
+   * it is unowned and not shown to any tenant-listed user.
+   */
+  userId?: string
+  /**
    * Projection baseline for this row, with zero log loads: attached sessions
    * read the registry's live watermark cut; cold sessions read the persisted
    * projection cache's stored rows — as stale as that session's last durable
